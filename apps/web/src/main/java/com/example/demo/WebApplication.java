@@ -7,15 +7,17 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-public class WebApplication {
+public class WebApplication implements CommandLineRunner{
 	static final Map<Long, Quote> quotes = List.of(
 			new Quote(1L,
 					"There are only two kinds of languages: the ones people complain about and the ones nobody uses.",
@@ -56,6 +58,11 @@ public class WebApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(WebApplication.class, args);
+	}
+	
+	@Override
+	public void run(String... args) throws Exception {
+		new RestTemplate().getForEntity("http://localhost:8080/quote/11", Object.class);
 	}
 }
 

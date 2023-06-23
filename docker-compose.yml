@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+  pdb:
+    image: postgres:14.1-alpine
+    container_name: pdb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    # ports:
+    #   - 5432:5432
+    volumes: 
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  mdb:
+    image: mongo:6-jammy
+    container_name: mdb
+    command: --quiet --logpath /dev/null
+    # ports:
+    #   - "27017:27017"
+    volumes:
+      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  app:
+    image: ${appntag}
+    # web_jdbc:graalvm
+    container_name: app
+    depends_on:
+      pdb:
+        condition: service_healthy
+      mdb:
+        condition: service_healthy
+    # ports:
+    #   - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pdb:5432/postgres
+      - SPRING_R2DBC_URL=r2dbc:postgresql://pdb:5432/postgres
+      - SPRING_DATA_MONGODB_URI=mongodb://mdb/test
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+  jmt:
+    image: justb4/jmeter
+    container_name: jmt
+    depends_on:
+      - app
+    volumes: 
+      - ./:/mapped_dir
+    command: -JDELAY=${delay} -JRAMP_UP=${ramp_up} -JDURATION=${duration} -JTHREADS=${thread_amount} -n -t /mapped_dir/JMeter_test_plan.jmx -l /mapped_dir/${workspace}/JMeter_test_plan.jtl -j /mapped_dir/${workspace}/JMeter_test_plan.log -e -o /mapped_dir/${workspace}/report

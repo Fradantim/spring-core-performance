@@ -27,8 +27,6 @@ here=$(dirname $(readlink -f "$0"))
 
 apps=()
 
-# Add new element at the end of the array
-
 cd ${here}/apps/
 for i in `ls -d */`; do
 	# remove last "/"
@@ -64,10 +62,3 @@ for app in "${apps[@]}"; do
 done
 
 exit 0
-
-
-log_file=${here}/logs/deployer.sh_${full_date}.log.md
-
-sh ${here}/deployer.sh $* | tee -a ${log_file}
-retVal=${PIPESTATUS[0]}
-exit ${retVal}
