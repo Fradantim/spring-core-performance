@@ -4,8 +4,8 @@ here=$(dirname $(readlink -f "$0"))
 start_datetime=`date '+%Y%m%d%H%M%S'`
 
 export delay=15
-export ramp_up=30
-export duration=120
+export ramp_up=5
+export duration=15
 
 threads=(50 100 200 250)
 tags=("jvm" "graalvm")
@@ -45,6 +45,10 @@ for threads_idx in ${!threads[@]}; do
 			mkdir -p ${workspace}
 			chmod 777 ${workspace}
 			docker compose rm -fsv && docker compose up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+			ret=${PIPESTATUS[0]}
+			if [ $ret -ne 0 ]; then
+				exit $ret
+			fi
 		done
 	done
 done
