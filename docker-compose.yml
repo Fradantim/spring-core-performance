@@ -55,4 +55,4 @@ services:
       - app
     volumes: 
       - ./:/mapped_dir
-    command: -JDELAY=${delay} -JRAMP_UP=${ramp_up} -JDURATION=${duration} -JTHREADS=${thread_amount} -n -t /mapped_dir/JMeter_test_plan.jmx -l /mapped_dir/${workspace}/JMeter_test_plan.jtl -j /mapped_dir/${workspace}/JMeter_test_plan.log -e -o /mapped_dir/${workspace}/report
+    command: -JDELAY=${delay} -JRAMP_UP=${ramp_up} -JDURATION=${duration} -JTHREADS=${thread_amount} -Jjmeter.reportgenerator.overall_granularity=2000 -n -t /mapped_dir/JMeter_test_plan.jmx -l /mapped_dir/${workspace}/JMeter_test_plan.jtl -j /mapped_dir/${workspace}/JMeter_test_plan.log -e -o /mapped_dir/${workspace}/report
