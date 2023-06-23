@@ -42,7 +42,7 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://pdb:5432/postgres
       - SPRING_R2DBC_URL=r2dbc:postgresql://pdb:5432/postgres
-      - SPRING_DATA_MONGODB_URI=mongodb://mdb/test
+      - SPRING_DATA_MONGODB_URI=mongodb://mdb:27017/test
     deploy:
       resources:
         limits:
