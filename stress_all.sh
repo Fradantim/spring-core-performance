@@ -12,7 +12,7 @@ tags=("jvm" "graalvm")
 apps=()
 
 cd ${here}/apps/
-for i in `ls -d */`; do
+for i in `ls -d web*/`; do
 	# remove last "/"
 	i=${i::-1}
 	echo "- ${i}"
