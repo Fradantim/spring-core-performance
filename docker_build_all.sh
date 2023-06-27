@@ -1,8 +1,9 @@
 #!/bin/bash
 
+# DEPRECATED, wont use spring build packs
 spring_boot_build_image_and_retag() {
-	new_tag=${1}
-	profiles=${2}
+	new_tag=${1} # jvm / graalvm
+	profiles=${2} # "" / "-Pnative"
 	
 	# app_version=`sh mvnw help:evaluate -Dexpression=project.version -q -DforceStdout 2>nul` # too slow
 	app_version=`xmllint --xpath "//*[local-name()='project']/*[local-name()='version']/text()" pom.xml`
@@ -45,19 +46,42 @@ for app in "${apps[@]}"; do
 	cd ${here}/apps/${app}
 	
 	echo "============================================================"
-	echo " (${index}/${#apps[@]})   ${app} JVM (1/2)"
+	echo " (${index}/${#apps[@]})   ${app}"
 	echo "============================================================"
 	echo
 	
-	spring_boot_build_image_and_retag jvm
-	
-	echo "============================================================"
-	echo " (${index}/${#apps[@]})   ${app} GraalVM (2/2)"
-	echo "============================================================"
+	sh mvnw clean package -Pnative
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
 	echo
-	
-	spring_boot_build_image_and_retag graalvm -Pnative
-	
+	echo "docker build jvm ..."
+	echo
+
+	docker build -f ../../Dockerfile_jvm -t ${app}:jvm .
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
+	echo
+	echo "docker build graalvm ..."
+	echo
+
+	export APP_NAME=$(basename $(pwd))
+	cat ../../Dockerfile_graalvm | envsubst > /tmp/Dockerfile_graalvm_${app}
+
+	docker build -f /tmp/Dockerfile_graalvm_${app} -t ${app}:graalvm .
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
+	# clean proyect directory
+	sh mvnw clean
+	if [ $? -ne 0 ]; then
+		exit 1
+	fi
+
 	cd ${here}
 done
 
