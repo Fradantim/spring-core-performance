@@ -277,3 +277,39 @@ gantt
 	section webflux_r2dbc jvm
 	60968:0,60968
 ```
+
+## Other interesting metrics
+
+*recorded by hand*
+
+```mermaid
+gantt
+	title Startup time in seconds of a simple app
+	dateFormat X
+	axisFormat %s
+
+	section web gvm
+	0.24s (process running for 0.341):0,341
+	section web jvm
+	12.083s (process running for 14.262):0,14262
+	section webflux gvm
+	0.154s (process running for 0.258):0,258
+	section webflux jvm
+	10.215s (process running for 12.034):0,12034
+```
+
+```mermaid
+gantt
+	title Peak memory consumption in mb of a simple app with up to 50 concurrent clients in 120s
+	dateFormat X
+	axisFormat %s
+
+	section web gvm
+	160:0,160
+	section web jvm
+	210:0,210
+	section webflux gvm
+	150:0,150
+	section webflux jvm
+	180:0,180
+```
