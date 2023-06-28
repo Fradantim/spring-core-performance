@@ -3,11 +3,11 @@
 here=$(dirname $(readlink -f "$0"))
 start_datetime=`date '+%Y%m%d%H%M%S'`
 
-export delay=30
-export ramp_up=30
+export delay=0
+export ramp_up=15
 export duration=120
 
-threads=(25 50 100 200)
+threads=(50 100 250 500)
 tags=("jvm" "graalvm")
 apps=()
 
@@ -23,6 +23,10 @@ cd ${here}
 
 echo
 echo
+
+mkdir -p outputs/${start_datetime}
+chmod 777 outputs/${start_datetime}
+touch outputs/${start_datetime}/all.log;
 
 for threads_idx in ${!threads[@]}; do
 	export thread_amount=${threads[$threads_idx]}
@@ -44,7 +48,18 @@ for threads_idx in ${!threads[@]}; do
 			export workspace=outputs/${start_datetime}/${app}_${tag}_${thread_amount}
 			mkdir -p ${workspace}
 			chmod 777 ${workspace}
-			docker compose rm -fsv && docker compose up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+
+			dc_file=docker-compose.yml
+			case $app in
+				*dbc*)
+					dc_file=docker-compose_w_postgres.yml
+				;;
+				*mongo*)
+					dc_file=docker-compose_w_mongo.yml
+				;;
+			esac
+
+			docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
 			ret=${PIPESTATUS[0]}
 			if [ $ret -ne 0 ]; then
 				exit $ret

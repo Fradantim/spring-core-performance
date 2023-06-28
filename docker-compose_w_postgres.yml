@@ -1,5 +1,20 @@
 version: '3.8'
 services:
+  pdb:
+    image: postgres:14.1-alpine
+    container_name: pdb
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    # ports:
+    #   - 5432:5432
+    volumes: 
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
   app:
     image: ${appntag}
     # web_jdbc:graalvm
@@ -9,6 +24,14 @@ services:
       interval: 5s
       timeout: 4s
       retries: 6
+    depends_on:
+      pdb:
+        condition: service_healthy
+    # ports:
+    #   - 8080:8080
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://pdb:5432/postgres
+      - SPRING_R2DBC_URL=r2dbc:postgresql://pdb:5432/postgres
     deploy:
       resources:
         limits:
