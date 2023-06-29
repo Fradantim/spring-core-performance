@@ -55,7 +55,7 @@ while true; do bash stress_all.sh; done
 ## Loading results
 ``` bash
 cd apps/util_result_collector
-sh mvnw spring-boot:run
+sh mvnw spring-boot:run -Dspring-boot.run.arguments=--PATH_2_LOOK=$(pwd)/../../outputs
 ```
 
 At the end it will print the test results in a markup syntax:
