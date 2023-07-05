@@ -24,7 +24,20 @@ spring_boot_build_image_and_retag() {
 	echo
 }
 
-here=$(dirname $(readlink -f "$0"))
+escape() {
+	cd ${here}
+	docker compose -f docker-compose_all.yml down
+	exit ${1}
+}
+
+docker compose -f docker-compose_all.yml up -d
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+echo
+echo
+
+export here=$(dirname $(readlink -f "$0"))
 
 apps=()
 
@@ -46,13 +59,13 @@ for app in "${apps[@]}"; do
 	cd ${here}/apps/${app}
 	
 	echo "============================================================"
-	echo " (${index}/${#apps[@]})   ${app}"
+	echo " (${index}/${#apps[@]})   ${app} jvm & graalvm (1/2)"
 	echo "============================================================"
 	echo
 	
-	sh mvnw clean package -Pnative
+	sh mvnw -Pnative clean native:compile
 	if [ $? -ne 0 ]; then
-		exit 1
+		escape 1
 	fi
 
 	echo
@@ -61,7 +74,7 @@ for app in "${apps[@]}"; do
 
 	docker build -f ../../Dockerfile_jvm -t ${app}:jvm .
 	if [ $? -ne 0 ]; then
-		exit 1
+		escape 1
 	fi
 
 	echo
@@ -69,20 +82,44 @@ for app in "${apps[@]}"; do
 	echo
 
 	export APP_NAME=$(basename $(pwd))
-	cat ../../Dockerfile_graalvm | envsubst > /tmp/Dockerfile_graalvm_${app}
+	cat ../../Dockerfile_graalvm | envsubst > /tmp/Dockerfile_graalvm
 
-	docker build -f /tmp/Dockerfile_graalvm_${app} -t ${app}:graalvm .
+	docker build -f /tmp/Dockerfile_graalvm -t ${app}:gvm .
 	if [ $? -ne 0 ]; then
-		exit 1
+		escape 1
+	fi
+
+	echo "============================================================"
+	echo " (${index}/${#apps[@]})   ${app} graalvm pgo (2/2)"
+	echo "============================================================"
+	echo
+
+	sh mvnw clean -Pnative -Ppgo-instrument native:compile
+	if [ $? -ne 0 ]; then
+		escape 1
+	fi
+
+	./target/${app}_pgo-instrument x
+	
+	sh mvnw clean -Pnative -Ppgo native:compile
+	if [ $? -ne 0 ]; then
+		escape 1
+	fi
+
+	export APP_NAME=$(basename $(pwd))_pgo
+	cat ../../Dockerfile_graalvm | envsubst > /tmp/Dockerfile_graalvm
+	docker build -f /tmp/Dockerfile_graalvm -t ${app}:gvm-pgo .
+	if [ $? -ne 0 ]; then
+		escape 1
 	fi
 
 	# clean proyect directory
 	sh mvnw clean
 	if [ $? -ne 0 ]; then
-		exit 1
+		escape 1
 	fi
 
-	cd ${here}
+	rm default.iprof
 done
 
-exit 0
+escape 0
