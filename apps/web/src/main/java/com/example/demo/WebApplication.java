@@ -4,14 +4,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
-public class WebApplication implements CommandLineRunner {
+public class WebApplication {
 	static final Map<Long, Quote> quotes = List.of(
 			new Quote(1L,
 					"There are only two kinds of languages: the ones people complain about and the ones nobody uses.",
@@ -64,25 +68,21 @@ public class WebApplication implements CommandLineRunner {
 		ctx = SpringApplication.run(WebApplication.class, args);
 	}
 
-	@Override
-	public void run(String... args) throws Exception {
-		RestTemplate rt = new RestTemplate();
-		rt.getForEntity("http://localhost:8080/quote/11", String.class);
-		if (args.length > 0) {
-			System.out.println("args not empty, stressing...");
-			IntStream.range(0, 50000).parallel().forEach(i -> {
+	@Bean
+	// @ConditionalOnProperty("stress") // not currently working with spring-native
+	public CommandLineRunner stresser(@Value("${stress:false}") Boolean stress) {
+		return (args) -> {
+			if (stress) {
+				RestTemplate rt = new RestTemplate();
 				rt.getForEntity("http://localhost:8080/quote/11", String.class);
-			});
-			new Thread(() -> {
+				System.out.println("stressing...");
+				IntStream.range(0, 50000).parallel().forEach(i -> {
+					rt.getForEntity("http://localhost:8080/quote/11", String.class);
+				});
 				System.out.println("closing context...");
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-				ctx.close();
-			}).start();
-		}
+				Executors.newSingleThreadScheduledExecutor().schedule(() -> ctx.close(), 2, TimeUnit.SECONDS);
+			}
+		};
 	}
 }
 

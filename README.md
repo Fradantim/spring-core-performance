@@ -2,19 +2,18 @@
 Comparison between 
 - blocking tomcat
 - reactive netty
-- project loom (to be added after Java 21 release)
+
+with and without
+- virtual threads (Project Loom)
 
 with and without integrations 
 - postgresql
 - mongodb
-- kafka (pending)
 
 with and without GraalVM native compilation, with and without profile guided optimizations
 
 ## Requirements to build test apps
 - docker
-- GraalVM for Java 17 with pgo support (sdkman 17.0.7-graal works great)
-- zip
 
 ## HW & SW specs
 Results provided here were executed in this machine:
@@ -24,10 +23,6 @@ RAM: 16GB DDR4 @ 3200MHz
 ```
 ```
 Linux 5.15.0-76-generic #83~20.04.1-Ubuntu SMP Wed Jun 21 20:23:31 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
-
-java version "17.0.7" 2023-04-18 LTS
-Java(TM) SE Runtime Environment Oracle GraalVM 17.0.7+8.1 (build 17.0.7+8-LTS-jvmci-23.0-b12)
-Java HotSpot(TM) 64-Bit Server VM Oracle GraalVM 17.0.7+8.1 (build 17.0.7+8-LTS-jvmci-23.0-b12, mixed mode, sharing)
 
 Docker version 24.0.2, build cb74dfc
 Docker Compose version v2.18.1
