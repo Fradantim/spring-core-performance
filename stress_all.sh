@@ -27,7 +27,7 @@ zip_and_clean(){
 here=$(dirname $(readlink -f "$0"))
 start_datetime=`date '+%Y%m%d%H%M%S'`
 
-export delay=0
+export delay=5 # to let prometheus start scraping
 export ramp_up=15
 export duration=120
 export report_granurality=200

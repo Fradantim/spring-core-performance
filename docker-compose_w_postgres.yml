@@ -8,6 +8,11 @@ services:
     volumes:
       - ./prometheus:/etc/prometheus
       - ./outputs/prometheus:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "http://localhost:9090", "-O", "health_wget"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
   pdb:
     image: postgres:14.1-alpine
     container_name: pdb
@@ -31,7 +36,7 @@ services:
       retries: 6
     depends_on:
       pmt:
-        condition: service_started
+        condition: service_healthy
       pdb:
         condition: service_healthy
     environment:
