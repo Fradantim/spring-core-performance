@@ -18,14 +18,12 @@ with and without GraalVM native compilation, with and without profile guided opt
 ## HW & SW specs
 Results provided here were executed in this machine:
 ```
-CPU: 11th Gen Intel® Core™ i7-1185G7 @ 3.00GHz × 8
+CPU: Intel(R) Core(TM) i7-7700K CPU @ 4.20GHz
 RAM: 16GB DDR4 @ 3200MHz
 ```
 ```
-Linux 5.15.0-76-generic #83~20.04.1-Ubuntu SMP Wed Jun 21 20:23:31 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
-
-Docker version 24.0.2, build cb74dfc
-Docker Compose version v2.18.1
+Linux 6.2.0-35-generic #35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct  6 10:23:26 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+Docker version 24.0.6, build ed223bc
 ```
 
 ## Building test apps
