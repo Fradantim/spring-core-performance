@@ -34,34 +34,39 @@ Docker Compose version v2.18.1
 bash docker_build_all.sh
 ```
 
+Something went wrong? you may need to:
+``` bash
+sudo chmod -R 777 outputs/
+```
+
 After completition you should be able to see test apps docker images
 
 ``` bash
 docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 ```
 ```
-REPOSITORY               TAG           SIZE
-web_mongo                gvm-pgo       93.8MB
-web_mongo                gvm           119MB
-web_mongo                jvm           191MB
-web_jdbc                 gvm-pgo       93.1MB
-web_jdbc                 gvm           118MB
-web_jdbc                 jvm           189MB
-webflux_r2dbc            gvm-pgo       94.3MB
-webflux_r2dbc            gvm           119MB
-webflux_r2dbc            jvm           191MB
-webflux_mongo            gvm-pgo       95.9MB
-webflux_mongo            gvm           122MB
-webflux_mongo            jvm           194MB
-webflux                  gvm-pgo       81.9MB
-webflux                  gvm           105MB
-webflux                  jvm           187MB
-web                      gvm-pgo       80.9MB
-web                      gvm           103MB
-web                      jvm           184MB
+REPOSITORY        TAG           SIZE
+web_mongo         jvm           218MB
+web_mongo         gvm-pgo       99MB
+web_mongo         gvm           120MB
+web_jdbc          jvm           216MB
+web_jdbc          gvm-pgo       96.3MB
+web_jdbc          gvm           116MB
+webflux_r2dbc     jvm           219MB
+webflux_r2dbc     gvm-pgo       99.5MB
+webflux_r2dbc     gvm           118MB
+webflux_mongo     jvm           221MB
+webflux_mongo     gvm-pgo       102MB
+webflux_mongo     gvm           122MB
+webflux           jvm           215MB
+webflux           gvm-pgo       86.8MB
+webflux           gvm           106MB
+web               jvm           212MB
+web               gvm-pgo       85.6MB
+web               gvm           104MB
 ```
 
-> took like 1h30m to complete...
+> took like an hour to complete...
 
 ## Stressing test apps
 

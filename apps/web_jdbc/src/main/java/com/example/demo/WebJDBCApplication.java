@@ -1,8 +1,6 @@
 package com.example.demo;
 
 import java.util.Collection;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,7 +38,10 @@ public class WebJDBCApplication {
 					rt.getForEntity("http://localhost:8080/quote/11", String.class);
 				});
 				System.out.println("closing context...");
-				Executors.newSingleThreadScheduledExecutor().schedule(() -> ctx.close(), 2, TimeUnit.SECONDS);
+				// context.close does not stop the executable on pgo-instrumented compilation
+				// Executors.newSingleThreadScheduledExecutor().schedule(() -> ctx.close(), 2,
+				// TimeUnit.SECONDS);
+				System.exit(0);
 			}
 		};
 	}

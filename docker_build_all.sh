@@ -29,8 +29,7 @@ apps=()
 
 cd ${here}/apps/
 for i in `ls -d web*/`; do
-	# remove last "/"
-	i=${i::-1}
+	i=${i::-1} # remove last "/"
 	echo "- ${i}"
 	apps+=(${i})
 done
@@ -49,7 +48,7 @@ for app in "${apps[@]}"; do
 		docker_file_index=$((docker_file_index + 1))
 
 		echo "============================================================"
-		echo "${app} (${app_index}/${#apps[@]}) ${docker_file} (${docker_file_index}/${#docker_files[@]})"
+		echo "[ $(((app_index - 1)*${#docker_files[@]} + docker_file_index)) / $((${#apps[@]}*${#docker_files[@]})) ]  ::  ${app} (${app_index}/${#apps[@]}) ${docker_file} (${docker_file_index}/${#docker_files[@]})"
 		echo "============================================================"
 		echo
 		
@@ -58,7 +57,7 @@ for app in "${apps[@]}"; do
 		cat ../../${docker_file} | envsubst > /tmp/${docker_file}
 		tag=$(echo ${docker_file} | cut -d '_' -f 2)
 
-		docker build -f /tmp/${docker_file} -t ${app}:${tag} .
+		docker build -f /tmp/${docker_file} -t ${app}:${tag} --add-host=host.docker.internal:host-gateway --network host .
 		if [ $? -ne 0 ]; then
 			escape 1
 		fi

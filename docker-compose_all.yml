@@ -6,7 +6,7 @@ services:
     volumes:
       - ./outputs/nexus-data:/nexus-data
     ports:
-      - 8081:8081
+      - 0.0.0.0:8081:8081
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/service/rest/v1/status/writable"]
       interval: 5s
@@ -17,7 +17,7 @@ services:
     container_name: mdb
     command: --quiet --logpath /dev/null
     ports:
-      - "27017:27017"
+      - 0.0.0.0:27017:27017
     volumes:
       - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
@@ -32,7 +32,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     ports:
-      - 5432:5432
+      - 0.0.0.0:5432:5432
     volumes: 
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
