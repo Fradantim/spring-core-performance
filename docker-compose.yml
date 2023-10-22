@@ -1,14 +1,24 @@
 version: '3.8'
 services:
+  pmt:
+    image: prom/prometheus
+    container_name: pmt
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./outputs/prometheus:/prometheus
   app:
     image: ${appntag}
-    # web_jdbc:graalvm
     container_name: app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/quote/11"]
       interval: 5s
       timeout: 4s
       retries: 6
+    depends_on:
+      pmt:
+        condition: service_started
     deploy:
       resources:
         limits:

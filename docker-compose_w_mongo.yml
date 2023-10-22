@@ -1,22 +1,26 @@
 version: '3.8'
 services:
+  pmt:
+    image: prom/prometheus
+    container_name: pmt
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./outputs/prometheus:/prometheus
   mdb:
     image: mongo:6-jammy
     container_name: mdb
     command: --quiet --logpath /dev/null
-    # ports:
-    #   - "27017:27017"
     volumes:
       - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
-      # test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 2s
       timeout: 2s
       retries: 5
   app:
     image: ${appntag}
-    # web_jdbc:graalvm
     container_name: app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/quote/11"]
@@ -26,8 +30,6 @@ services:
     depends_on:
       mdb:
         condition: service_healthy
-    # ports:
-    #   - 8080:8080
     environment:
       - SPRING_DATA_MONGODB_URI=mongodb://mdb:27017/test
     deploy:

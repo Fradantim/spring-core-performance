@@ -28,7 +28,7 @@ echo
 apps=()
 
 cd ${here}/apps/
-for i in `ls -d web*/`; do
+for i in `ls -d w*/`; do
 	i=${i::-1} # remove last "/"
 	echo "- ${i}"
 	apps+=(${i})

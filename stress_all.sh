@@ -37,7 +37,7 @@ clientss=(50 250 500)
 apps=()
 
 cd ${here}/apps/
-for i in `ls -d web*/`; do
+for i in `ls -d w*/`; do
 	# remove last "/"
 	i=${i::-1}
 	echo "- ${i}"

@@ -1,13 +1,19 @@
 version: '3.8'
 services:
+  pmt:
+    image: prom/prometheus
+    container_name: pmt
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./prometheus:/etc/prometheus
+      - ./outputs/prometheus:/prometheus
   pdb:
     image: postgres:14.1-alpine
     container_name: pdb
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-    # ports:
-    #   - 5432:5432
     volumes: 
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
@@ -17,7 +23,6 @@ services:
       retries: 5
   app:
     image: ${appntag}
-    # web_jdbc:graalvm
     container_name: app
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/quote/11"]
@@ -25,10 +30,10 @@ services:
       timeout: 4s
       retries: 6
     depends_on:
+      pmt:
+        condition: service_started
       pdb:
         condition: service_healthy
-    # ports:
-    #   - 8080:8080
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://pdb:5432/postgres
       - SPRING_R2DBC_URL=r2dbc:postgresql://pdb:5432/postgres
