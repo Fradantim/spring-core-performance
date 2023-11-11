@@ -9,6 +9,7 @@ with and without
 with and without integrations 
 - postgresql
 - mongodb
+- redis
 
 with and without GraalVM native compilation, with and without profile guided optimizations
 

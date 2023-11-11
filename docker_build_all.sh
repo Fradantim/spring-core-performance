@@ -27,9 +27,8 @@ echo
 
 apps=()
 
-cd ${here}/apps/
-for i in `ls -d w*/`; do
-	i=${i::-1} # remove last "/"
+cd ${here}/apps/spring-parent/
+for i in `ls -d w*`; do
 	echo "- ${i}"
 	apps+=(${i})
 done
@@ -40,21 +39,22 @@ echo
 app_index=0
 for app in "${apps[@]}"; do
 	app_index=$((app_index + 1))
-	
-	cd ${here}/apps/${app}
 
 	docker_file_index=0
 	for docker_file in "${docker_files[@]}"; do
 		docker_file_index=$((docker_file_index + 1))
 
+		global_stat="[ $(((app_index - 1)*${#docker_files[@]} + docker_file_index)) / $((${#apps[@]}*${#docker_files[@]})) ]"
+		app_stat="(${app_index}/${#apps[@]})"
+		dfile_stat="(${docker_file_index}/${#docker_files[@]})"
 		echo "============================================================"
-		echo "[ $(((app_index - 1)*${#docker_files[@]} + docker_file_index)) / $((${#apps[@]}*${#docker_files[@]})) ]  ::  ${app} (${app_index}/${#apps[@]}) ${docker_file} (${docker_file_index}/${#docker_files[@]})"
+		echo "${global_stat}  ::  ${app} ${app_stat} ${docker_file} ${dfile_stat}"
 		echo "============================================================"
 		echo
 		
-		export APP_NAME=$(basename $(pwd))
+		export APP_NAME=${app}
 
-		cat ../../${docker_file} | envsubst > /tmp/${docker_file}
+		cat ${here}/${docker_file} | envsubst > /tmp/${docker_file}
 		tag=$(echo ${docker_file} | cut -d '_' -f 2)
 
 		docker build -f /tmp/${docker_file} -t ${app}:${tag} --add-host=host.docker.internal:host-gateway --network host .

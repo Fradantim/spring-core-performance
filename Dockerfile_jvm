@@ -13,10 +13,10 @@ COPY . .
 # compile app
 # sharing a network repository seems like a good idea if you already have one, but the first load takes 180s~ and later 18s~, while not using it takes 27s~ (for java apps)
 RUN mkdir ~/.m2 && echo "<settings> <mirrors> <mirror> <id>nexus</id> <mirrorOf>*</mirrorOf> <url>http://host.docker.internal:8081/repository/maven-public/</url> </mirror> </mirrors> </settings>" > ~/.m2/settings.xml
-RUN sh mvnw clean package
+RUN sh mvnw clean package -pl ${APP_NAME}
 
 # the final container
 FROM eclipse-temurin:21-jre-alpine
 RUN apk --no-cache add curl
-COPY --from=builder target/*.jar app.jar
-ENTRYPOINT ["java","-jar","/app.jar"]
+COPY --from=builder ${APP_NAME}/target/*.jar ${APP_NAME}.jar
+ENTRYPOINT ["java","-jar","${APP_NAME}.jar"]
