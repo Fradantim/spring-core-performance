@@ -18,11 +18,11 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
-public class WebHttpApplication {
+public class WebFluxHttpApplication {
 	static ConfigurableApplicationContext ctx;
 
 	public static void main(String[] args) {
-		ctx = SpringApplication.run(WebHttpApplication.class, args);
+		ctx = SpringApplication.run(WebFluxHttpApplication.class, args);
 	}
 
 	@Bean

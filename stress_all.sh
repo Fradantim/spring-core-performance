@@ -36,10 +36,8 @@ cpuss=(1 2 4)
 clientss=(50 250 500)
 apps=()
 
-cd ${here}/apps/
-for i in `ls -d w*/`; do
-	# remove last "/"
-	i=${i::-1}
+cd ${here}/apps/spring-parent/
+for i in `ls -d w*`; do
 	echo "- ${i}"
 	apps+=(${i})
 done
@@ -95,7 +93,15 @@ for cpus_idx in ${!cpuss[@]}; do
 					*mongo*)
 						dc_file=docker-compose_w_mongo.yml
 					;;
+					*redis*)
+						dc_file=docker-compose_w_redis.yml
+					;;
+					*http*)
+						dc_file=docker-compose_w_http.yml
+					;;
 				esac
+
+				dc_file=${here}/docker-compose/stress/${dc_file}
 
 				docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
 				ret=${PIPESTATUS[0]}

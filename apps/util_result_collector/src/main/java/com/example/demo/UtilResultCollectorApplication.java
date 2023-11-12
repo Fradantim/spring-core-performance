@@ -60,6 +60,8 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		List<AppResult> siAppResults = new ArrayList<>();
 		List<AppResult> dbAppResults = new ArrayList<>();
 		List<AppResult> mgAppResults = new ArrayList<>();
+		List<AppResult> rdAppResults = new ArrayList<>();
+		List<AppResult> htAppResults = new ArrayList<>();
 
 		Stream<File> appTestOutputs = Stream.of(new File(path).listFiles()).filter(File::isDirectory)
 				.peek(f -> System.out.print(f.getName()+": ")).flatMap(f -> Stream.of(f.listFiles()))
@@ -84,6 +86,10 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 					appResults = mgAppResults;
 				} else if (appTestOutput.getName().contains("dbc")) {
 					appResults = dbAppResults;
+				} else if (appTestOutput.getName().contains("redis")) {
+					appResults = rdAppResults;
+				} else if (appTestOutput.getName().contains("http")) {
+					appResults = htAppResults;
 				} else {
 					appResults = siAppResults;
 				}
@@ -158,6 +164,16 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		System.out.println("### MongoDB integrated app");
 		printTable("Requests processed per second", mgAppResults, speedMapper);
 		printTable("Amount of requests processed", mgAppResults, amountProcessedMapper);
+		
+		System.out.println();
+		System.out.println("### Redis integrated app");
+		printTable("Requests processed per second", rdAppResults, speedMapper);
+		printTable("Amount of requests processed", rdAppResults, amountProcessedMapper);
+		
+		System.out.println();
+		System.out.println("### Http integrated app");
+		printTable("Requests processed per second", htAppResults, speedMapper);
+		printTable("Amount of requests processed", htAppResults, amountProcessedMapper);
 	}
 
 	private void printTable(String title, List<AppResult> results, Function<AppResult, String> resultMapper) {

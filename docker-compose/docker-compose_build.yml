@@ -4,7 +4,7 @@ services:
     image: sonatype/nexus3
     container_name: nxs
     volumes:
-      - ./outputs/nexus-data:/nexus-data
+      - ../outputs/nexus-data:/nexus-data
     ports:
       - 0.0.0.0:8081:8081
     healthcheck:
@@ -19,7 +19,7 @@ services:
     ports:
       - 0.0.0.0:27017:27017
     volumes:
-      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 2s
@@ -34,9 +34,43 @@ services:
     ports:
       - 0.0.0.0:5432:5432
     volumes: 
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  moc:
+    image: mockserver/mockserver:5.15.0
+    container_name: moc
+    ports:
+      - 0.0.0.0:1080:1080
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/mockserver.json
+    volumes:
+      - type: bind
+        source: ../db
+        target: /config
+  red:
+    container_name: red
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM redis:7.2.3
+        EXPOSE 6379
+        ENTRYPOINT nohup bash -c "redis-server --appendonly yes" & sleep 1s \
+          && cat /init-data/redis.init | redis-cli --pipe \
+          && redis-cli save \
+          && redis-cli shutdown \
+          && redis-server
+    ports:
+      - 0.0.0.0:6379:6379
+    volumes:
+      - type: bind
+        source: ../db
+        target: /init-data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 2s
       timeout: 2s
       retries: 5

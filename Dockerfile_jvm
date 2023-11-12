@@ -3,7 +3,7 @@ FROM ubuntu:22.04 AS builder
 
 # get and set graalvm-jdk-21
 RUN apt-get update && apt-get install wget -y
-RUN wget https://download.oracle.com/graalvm/21/latest/graalvm-jdk-21_linux-x64_bin.tar.gz && tar -xf graalvm-jdk-21_linux-x64_bin.tar.gz
+RUN wget https://download.oracle.com/graalvm/21/archive/graalvm-jdk-21_linux-x64_bin.tar.gz && tar -xf graalvm-jdk-21_linux-x64_bin.tar.gz
 RUN mv graalvm*/ graalvm-jdk-21/
 ENV JAVA_HOME=./graalvm-jdk-21
 RUN export JAVA_HOME

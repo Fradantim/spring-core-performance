@@ -57,8 +57,8 @@ class QuoteResource {
 	}
 
 	@GetMapping("/quote/{id}")
-	public ResponseEntity<Quote> findById(@PathVariable Long id) {
-		return rt.getForEntity(url+"/quote/"+id, Quote.class);
+	public Quote findById(@PathVariable Long id) {
+		return rt.getForEntity(url+"/quote/"+id, Quote.class).getBody();
 	}
 }
 
