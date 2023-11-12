@@ -1,15 +1,18 @@
 #!/bin/bash
 
+build_docker_compose_file=docker-compose/docker-compose_build.yml
+
 escape() {
 	cd ${here}
-	docker compose -f docker-compose_all.yml down
+	docker compose -f ${build_docker_compose_file} down
 	exit ${1}
 }
 
-docker compose -f docker-compose_all.yml up --wait -d
+docker compose -f ${build_docker_compose_file} up --wait -d
 if [ $? -ne 0 ]; then
 	exit 1
 fi
+
 echo
 echo
 

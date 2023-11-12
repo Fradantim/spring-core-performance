@@ -22,9 +22,11 @@
 		<module>web</module>
 		<module>web_jdbc</module>
 		<module>web_mongo</module>
+		<module>web_redis</module>
 		<module>wfx</module>
 		<module>wfx_r2dbc</module>
 		<module>wfx_mongo</module>
+		<module>wfx_redis</module>
 	</modules>
 
 	<build>

@@ -1,0 +1,7 @@
+spring:
+  application.name: @project.artifactId@
+  data.redis.url: redis://localhost:6379
+
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  metrics.tags.application: ${spring.application.name}
