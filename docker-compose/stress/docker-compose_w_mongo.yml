@@ -6,8 +6,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     volumes:
-      - ./prometheus:/etc/prometheus
-      - ./outputs/prometheus:/prometheus
+      - ../../prometheus:/etc/prometheus
+      - ../../outputs/prometheus:/prometheus
     healthcheck:
       test: ["CMD", "wget", "http://localhost:9090", "-O", "health_wget"]
       interval: 2s
@@ -18,7 +18,7 @@ services:
     container_name: mdb
     command: --quiet --logpath /dev/null
     volumes:
-      - ./db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../../db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
       test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 2s
@@ -51,5 +51,5 @@ services:
       app:
         condition: service_healthy
     volumes: 
-      - ./:/mapped_dir
+      - ../../:/mapped_dir
     command: -JDELAY=${delay} -JRAMP_UP=${ramp_up} -JDURATION=${duration} -JTHREADS=${clients} -Jjmeter.reportgenerator.overall_granularity=${report_granurality} -n -t /mapped_dir/JMeter_test_plan.jmx -l /mapped_dir/${workspace}/JMeter_test_plan.jtl -j /mapped_dir/${workspace}/JMeter_test_plan.log -e -o /mapped_dir/${workspace}/report

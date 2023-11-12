@@ -13,27 +13,17 @@ services:
       interval: 2s
       timeout: 2s
       retries: 5
-  red:
-    container_name: red
-    build:
-      context: .
-      dockerfile_inline: |
-        FROM redis:7.2.3
-        EXPOSE 6379
-        ENTRYPOINT nohup bash -c "redis-server --appendonly yes" & sleep 1s \
-          && cat /init-data/redis.init | redis-cli --pipe \
-          && redis-cli save \
-          && redis-cli shutdown \
-          && redis-server
+  moc:
+    image: mockserver/mockserver:5.15.0
+    container_name: moc
+    ports:
+      - 1080:1080 # TODO
+    environment:
+      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/mockserver.json
     volumes:
       - type: bind
         source: ../../db
-        target: /init-data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
-      interval: 2s
-      timeout: 2s
-      retries: 5
+        target: /config
   app:
     image: ${appntag}
     container_name: app
@@ -45,10 +35,10 @@ services:
     depends_on:
       pmt:
         condition: service_healthy
-      red:
-        condition: service_healthy
+      moc:
+        condition: service_started
     environment:
-      - SPRING_DATA_REDIS_URL=redis://red:6379
+      - URL=http://moc:1080
     deploy:
       resources:
         limits:

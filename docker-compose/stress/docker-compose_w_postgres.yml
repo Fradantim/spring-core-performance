@@ -6,8 +6,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     volumes:
-      - ./prometheus:/etc/prometheus
-      - ./outputs/prometheus:/prometheus
+      - ../../prometheus:/etc/prometheus
+      - ../../outputs/prometheus:/prometheus
     healthcheck:
       test: ["CMD", "wget", "http://localhost:9090", "-O", "health_wget"]
       interval: 2s
@@ -20,7 +20,7 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes: 
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../../db/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 2s
@@ -54,5 +54,5 @@ services:
       app:
         condition: service_healthy
     volumes: 
-      - ./:/mapped_dir
+      - ../../:/mapped_dir
     command: -JDELAY=${delay} -JRAMP_UP=${ramp_up} -JDURATION=${duration} -JTHREADS=${clients} -Jjmeter.reportgenerator.overall_granularity=${report_granurality} -n -t /mapped_dir/JMeter_test_plan.jmx -l /mapped_dir/${workspace}/JMeter_test_plan.jtl -j /mapped_dir/${workspace}/JMeter_test_plan.log -e -o /mapped_dir/${workspace}/report

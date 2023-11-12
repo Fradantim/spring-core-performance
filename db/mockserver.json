@@ -1,0 +1,14 @@
+[
+    {
+      "httpRequest": {
+        "path": "/quote/11"
+      },
+      "httpResponse": {
+        "body": {
+          "id":11,
+          "quote":"Deleted code is debugged code.",
+          "author":"Jeff Sickel"
+        }
+      }
+    }
+  ]

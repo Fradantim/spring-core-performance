@@ -1,0 +1,7 @@
+spring.application.name:  @project.artifactId@
+
+url: http://localhost:1080
+    
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  metrics.tags.application: ${spring.application.name}
