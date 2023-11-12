@@ -16,10 +16,9 @@ services:
   moc:
     image: mockserver/mockserver:5.15.0
     container_name: moc
-    ports:
-      - 1080:1080 # TODO
     environment:
       - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/mockserver.json
+      - MOCKSERVER_LOG_LEVEL=WARN
     volumes:
       - type: bind
         source: ../../db
