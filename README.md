@@ -75,13 +75,14 @@ bash stress_all.sh
 ```
 Each execution takes close to 6hs...
 ```
-3 amounts of threads (1 2 4)
-3 amounts of clients (50 250 500)
-120 seconds of stress
-6 apps
+2 amounts of threads (1 2)
+2 amounts of clients (100 300)
+60 seconds of stress
+10 apps
 3 types per app (jvm, graalvm, pgo graalvm)
+2 thread types (virtual threads, real threads)
 extra 10% for startups
-3 * 3 * 120s * 6 * 3 * 1.1 = 21384s = 5.94h
+2 * 2 * 60s * 10 * 3 * 2 * 1.1 = 15840s = 4.4h
 ```
 Run it as many times you want to get more data as next step will load the best result for each case.
 ``` bash

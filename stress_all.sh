@@ -29,11 +29,11 @@ start_datetime=`date '+%Y%m%d%H%M%S'`
 
 export delay=5 # to let prometheus start scraping
 export ramp_up=15
-export duration=120
+export duration=60
 export report_granurality=200
 
-cpuss=(1 2 4)
-clientss=(50 250 500)
+cpuss=(1 2)
+clientss=(100 300)
 apps=()
 
 cd ${here}/apps/spring-parent/
