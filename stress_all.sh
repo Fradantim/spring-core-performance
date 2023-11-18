@@ -52,6 +52,16 @@ mkdir -p outputs/${start_datetime}
 chmod 777 outputs/${start_datetime}
 touch outputs/${start_datetime}/all.log
 
+global_count=0
+per_tag_count=$(( ${#cpuss[@]} * ${#clientss[@]} * ${#vthreadss[@]} ))
+for app_idx in ${!apps[@]}; do
+	app=${apps[$app_idx]}
+	for tag in `docker image ls ${app} --format "{{.Tag}}"`; do
+		global_count=$((global_count + per_tag_count))
+	done
+done
+
+global_idx=0
 for cpus_idx in ${!cpuss[@]}; do
 	export cpus=${cpuss[$cpus_idx]}
 	echo "============================================================"
@@ -78,6 +88,7 @@ for cpus_idx in ${!cpuss[@]}; do
 				tag=${tags[$tag_idx]}
 
 				for vthreadss_idx in ${!vthreadss[@]}; do
+					global_idx=$(( global_idx + 1 ))
 					export vthreads=${vthreadss[$vthreadss_idx]}
 					if ${vthreads}; then
 						export thread_type=VT
@@ -85,7 +96,8 @@ for cpus_idx in ${!cpuss[@]}; do
 						export thread_type=RT
 					fi
 
-					title="${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) "
+					title="[ ${global_idx} / ${global_count} ] ::"
+					title="${title} ${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) "
 					title="${title} ${clients} clients ($((clients_idx + 1))/${#clientss[@]})"
 					title="${title}  -"
 					title="${title} ${app} ($((app_idx + 1))/${#apps[@]})"
