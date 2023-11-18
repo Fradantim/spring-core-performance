@@ -38,6 +38,8 @@ services:
       mdb:
         condition: service_healthy
     environment:
+      - SPRING_APPLICATION_NAME=${spring_app_name}
+      - SPRING_THREADS_VIRTUAL_ENABLED=${vthreads}
       - SPRING_DATA_MONGODB_URI=mongodb://mdb:27017/test
     deploy:
       resources:

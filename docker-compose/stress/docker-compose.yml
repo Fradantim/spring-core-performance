@@ -24,6 +24,9 @@ services:
     depends_on:
       pmt:
         condition: service_healthy
+    environment:
+      - SPRING_APPLICATION_NAME=${spring_app_name}
+      - SPRING_THREADS_VIRTUAL_ENABLED=${vthreads}
     deploy:
       resources:
         limits:

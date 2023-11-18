@@ -40,6 +40,8 @@ services:
       pdb:
         condition: service_healthy
     environment:
+      - SPRING_APPLICATION_NAME=${spring_app_name}
+      - SPRING_THREADS_VIRTUAL_ENABLED=${vthreads}
       - SPRING_DATASOURCE_URL=jdbc:postgresql://pdb:5432/postgres
       - SPRING_R2DBC_URL=r2dbc:postgresql://pdb:5432/postgres
     deploy:

@@ -40,17 +40,6 @@ services:
       interval: 2s
       timeout: 2s
       retries: 5
-  moc:
-    image: mockserver/mockserver:5.15.0
-    container_name: moc
-    ports:
-      - 0.0.0.0:1080:1080
-    environment:
-      - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/mockserver.json
-    volumes:
-      - type: bind
-        source: ../db
-        target: /config
   red:
     container_name: red
     build:

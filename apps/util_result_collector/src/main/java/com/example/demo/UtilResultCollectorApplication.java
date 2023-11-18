@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -27,14 +26,12 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 
 	private static final ObjectMapper om = new ObjectMapper();
 
-	record AppResult(String app, String tag, int cpus, int clients, Map<String, Object> result)
+	record AppResult(String app, String tag, String threadType, int cpus, int clients, Map<String, Object> result)
 			implements Comparable<AppResult> {
 		@Override
 		public boolean equals(Object o) {
-			if (o instanceof AppResult or) {
-				return cpus == or.cpus && clients == or.clients && app.equals(or.app) && tag.equals(or.tag);
-			}
-			return false;
+			return this == o || o instanceof AppResult ar && cpus == ar.cpus && clients == ar.clients
+					&& threadType.equals(ar.threadType) && app.equals(ar.app) && tag.equals(ar.tag);
 		}
 
 		@Override
@@ -64,8 +61,8 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		List<AppResult> htAppResults = new ArrayList<>();
 
 		Stream<File> appTestOutputs = Stream.of(new File(path).listFiles()).filter(File::isDirectory)
-				.peek(f -> System.out.print(f.getName()+": ")).flatMap(f -> Stream.of(f.listFiles()))
-				.filter(File::isDirectory).peek(f -> System.out.print(f.getName()+" "));
+				.peek(f -> System.out.print(f.getName() + ": ")).flatMap(f -> Stream.of(f.listFiles()))
+				.filter(File::isDirectory).peek(f -> System.out.print(f.getName() + " "));
 
 		appTestOutputs.forEach(appTestOutput -> {
 			Optional<File> optStatFile = Stream.of(appTestOutput.listFiles()).filter(File::isDirectory)
@@ -97,10 +94,11 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 				String namePieces[] = appTestOutput.getName().split("_");
 				int clients = Integer.parseInt(namePieces[namePieces.length - 1]);
 				int cpus = Integer.parseInt(namePieces[namePieces.length - 2]);
-				String tag = namePieces[namePieces.length - 3];
-				String appName = String.join("_", Arrays.copyOf(namePieces, namePieces.length - 3));
+				String threadType = namePieces[namePieces.length - 3];
+				String tag = namePieces[namePieces.length - 4];
+				String appName = String.join("_", Arrays.copyOf(namePieces, namePieces.length - 4));
 
-				AppResult curResult = new AppResult(appName, tag, cpus, clients, curFileResult);
+				AppResult curResult = new AppResult(appName, tag, threadType, cpus, clients, curFileResult);
 
 				find(appResults, curResult).ifPresentOrElse((existingResult) -> {
 					if (curResult.compareTo(existingResult) > 0) {
@@ -164,12 +162,12 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		System.out.println("### MongoDB integrated app");
 		printTable("Requests processed per second", mgAppResults, speedMapper);
 		printTable("Amount of requests processed", mgAppResults, amountProcessedMapper);
-		
+
 		System.out.println();
 		System.out.println("### Redis integrated app");
 		printTable("Requests processed per second", rdAppResults, speedMapper);
 		printTable("Amount of requests processed", rdAppResults, amountProcessedMapper);
-		
+
 		System.out.println();
 		System.out.println("### Http integrated app");
 		printTable("Requests processed per second", htAppResults, speedMapper);
@@ -190,14 +188,16 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		System.out.println("<table>");
 		// headers
 		System.out.print("<tr>");
-		System.out.print("<th></th>");
-		System.out.print("<th></th>");
+		System.out.print("<th></th>"); // app column
+		System.out.print("<th></th>"); // tag column
+		System.out.print("<th></th>"); // thread type column
 		System.out.print("<th colspan=\"" + clientss.size() * cpuss.size() + "\">#clients & #cores</th>");
 		System.out.println("</tr>");
 
 		System.out.print("<tr>");
-		System.out.print("<th></th>");
-		System.out.print("<th></th>");
+		System.out.print("<th></th>"); // app column
+		System.out.print("<th></th>"); // tag column
+		System.out.print("<th></th>"); // thread type column
 		clientss.forEach(clients -> {
 			System.out.print("<th colspan=\"" + cpuss.size() + "\">" + clients + "</th>");
 		});
@@ -206,6 +206,7 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		System.out.print("<tr>");
 		System.out.print("<th>app</th>");
 		System.out.print("<th>tag</th>");
+		System.out.print("<th>thread</th>");
 		clientss.forEach(clients -> {
 			cpuss.forEach(cpus -> {
 				System.out.print("<th>" + cpus + "</th>");
@@ -214,28 +215,52 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		System.out.println("</tr>");
 
 		// data
-		apps.forEach(app -> {
+		for (String app : apps) {
 			Set<String> tags = results.stream().filter(r -> r.app.equals(app)).map(r -> r.tag)
 					.collect(Collectors.toCollection(TreeSet::new));
-			AtomicBoolean firstTag = new AtomicBoolean(true);
-			tags.forEach(tag -> {
-				System.out.print("<tr>");
-				if (firstTag.get()) {
-					firstTag.set(false);
-					System.out.print("<td rowspan=\"" + tags.size() + "\">" + app + "</td>");
-				}
-				System.out.print("<td>" + tag + "</td>");
-				clientss.forEach(clients -> {
-					cpuss.forEach(cpus -> {
-						AppResult result2find = new AppResult(app, tag, cpus, clients, null);
-						String result = results.stream().filter(r -> r.equals(result2find)).findFirst()
-								.map(resultMapper).orElseGet(() -> "N/A");
-						System.out.print("<th>" + result + "</th>");
+
+			Long appRowSpan = results.stream().filter(r -> r.app.equals(app))
+					.map(r -> r.app + "_" + r.tag + "_" + r.threadType).distinct().count();
+			String lastApp = null;
+			String lastTag = null;
+
+			for (String tag : tags) {
+				Set<String> threadTypes = results.stream().filter(r -> r.app.equals(app) && r.tag.equals(tag))
+						.map(r -> r.threadType).collect(Collectors.toCollection(TreeSet::new));
+
+				Long tagRowSpan = results.stream().filter(r -> r.app.equals(app) && r.tag.equals(tag))
+						.map(r -> r.app + "_" + r.tag + "_" + r.threadType).distinct().count();
+
+				for (String threadType : threadTypes) {
+					System.out.print("<tr>");
+					boolean newApp = false;
+					if (!app.equals(lastApp)) {
+						// new app
+						newApp = true;
+						lastApp = app;
+						System.out.print("<td rowspan=\"" + appRowSpan + "\">" + app + "</td>");
+					}
+
+					if (newApp || !tag.equals(lastTag)) {
+						// new tag
+						lastTag = tag;
+						System.out.print("<td rowspan=\"" + tagRowSpan + "\">" + tag + "</td>");
+					}
+
+					System.out.print("<td>" + threadType + "</td>");
+
+					clientss.forEach(clients -> {
+						cpuss.forEach(cpus -> {
+							AppResult result2find = new AppResult(app, tag, threadType, cpus, clients, null);
+							String result = results.stream().filter(result2find::equals).findFirst().map(resultMapper)
+									.orElseGet(() -> "N/A");
+							System.out.print("<th>" + result + "</th>");
+						});
 					});
-				});
-				System.out.println("</tr>");
-			});
-		});
+					System.out.println("</tr>");
+				}
+			}
+		}
 		System.out.println("</table>");
 		System.out.println();
 	}

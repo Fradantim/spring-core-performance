@@ -34,6 +34,7 @@ export report_granurality=200
 
 cpuss=(1 2)
 clientss=(100 300)
+vthreadss=(false true)
 apps=()
 
 cd ${here}/apps/spring-parent/
@@ -75,43 +76,59 @@ for cpus_idx in ${!cpuss[@]}; do
 
 			for tag_idx in ${!tags[@]}; do
 				tag=${tags[$tag_idx]}
-				echo "============================================================"
-				echo " ${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) ${clients} clients ($((clients_idx + 1))/${#clientss[@]}) - ${app} ($((app_idx + 1))/${#apps[@]}) : ${tag} ($((tag_idx + 1))/${#tags[@]})" | tee -a outputs/${start_datetime}/all.log
-				echo "============================================================"
-				echo | tee -a outputs/${start_datetime}/all.log
 
-				export appntag=${app}:${tag}
-				export workspace=outputs/${start_datetime}/${app}_${tag}_${cpus}_${clients}
-				mkdir -p ${workspace}
-				chmod -R 777 ${workspace}
+				for vthreadss_idx in ${!vthreadss[@]}; do
+					export vthreads=${vthreadss[$vthreadss_idx]}
+					if ${vthreads}; then
+						export thread_type=VT
+					else
+						export thread_type=RT
+					fi
 
-				dc_file=docker-compose.yml
-				case $app in
-					*dbc*)
-						dc_file=docker-compose_w_postgres.yml
-					;;
-					*mongo*)
-						dc_file=docker-compose_w_mongo.yml
-					;;
-					*redis*)
-						dc_file=docker-compose_w_redis.yml
-					;;
-					*http*)
-						dc_file=docker-compose_w_http.yml
-					;;
-				esac
+					title="${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) "
+					title="${title} ${clients} clients ($((clients_idx + 1))/${#clientss[@]})"
+					title="${title}  -"
+					title="${title} ${app} ($((app_idx + 1))/${#apps[@]})"
+					title="${title} :"
+					title="${title} ${tag} ($((tag_idx + 1))/${#tags[@]})"
+					title="${title} v_threads ${vthreads} ($((vthreadss_idx + 1))/${#vthreadss[@]})"
 
-				dc_file=${here}/docker-compose/stress/${dc_file}
+					echo "============================================================"
+					echo ${title} | tee -a outputs/${start_datetime}/all.log
+					echo "============================================================"
+					echo | tee -a outputs/${start_datetime}/all.log
 
-				docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
-				ret=${PIPESTATUS[0]}
-				if [ $ret -ne 0 ]; then
-					exit $ret
-				fi
+					export appntag=${app}:${tag}
+					export spring_app_name=${app}_${tag}_${thread_type}_${cpus}_${clients}
+					export workspace=outputs/${start_datetime}/${spring_app_name}
+					mkdir -p ${workspace}
+					chmod -R 777 ${workspace}
 
-				# zip_and_clean ${here} ${here}/${workspace}
+					dc_file=docker-compose.yml
+					case $app in
+						*dbc*)
+							dc_file=docker-compose_w_postgres.yml
+						;;
+						*mongo*)
+							dc_file=docker-compose_w_mongo.yml
+						;;
+						*redis*)
+							dc_file=docker-compose_w_redis.yml
+						;;
+					esac
 
-				echo | tee -a outputs/${start_datetime}/all.log
+					dc_file=${here}/docker-compose/stress/${dc_file}
+
+					docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+					ret=${PIPESTATUS[0]}
+					if [ $ret -ne 0 ]; then
+						exit $ret
+					fi
+
+					# zip_and_clean ${here} ${here}/${workspace}
+
+					echo | tee -a outputs/${start_datetime}/all.log
+				done
 			done
 		done
 	done

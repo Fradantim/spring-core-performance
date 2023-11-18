@@ -9,8 +9,8 @@
 		<version>0.0.1</version>
 		<relativePath>..</relativePath>
 	</parent>
-
-	<artifactId>wfx_redis</artifactId>
+	
+	<artifactId>wfx-mongo</artifactId>
 
 	<dependencies>
 		<dependency>
@@ -20,9 +20,9 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+			<artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>

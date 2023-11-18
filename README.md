@@ -46,34 +46,47 @@ docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 ```
 ```
 REPOSITORY        TAG           SIZE
-web_mongo         jvm           218MB
-web_mongo         gvm-pgo       99MB
-web_mongo         gvm           120MB
-web_jdbc          jvm           216MB
-web_jdbc          gvm-pgo       96.3MB
-web_jdbc          gvm           116MB
-webflux_r2dbc     jvm           219MB
-webflux_r2dbc     gvm-pgo       99.5MB
-webflux_r2dbc     gvm           118MB
-webflux_mongo     jvm           221MB
-webflux_mongo     gvm-pgo       102MB
-webflux_mongo     gvm           122MB
-webflux           jvm           215MB
-webflux           gvm-pgo       86.8MB
-webflux           gvm           106MB
-web               jvm           212MB
-web               gvm-pgo       85.6MB
-web               gvm           104MB
+REPOSITORY              TAG            SIZE
+wfx-redis               jvm            235MB
+wfx-redis               gvm-pgo        112MB
+wfx-redis               gvm            140MB
+wfx-r2dbc               jvm            232MB
+wfx-r2dbc               gvm-pgo        105MB
+wfx-r2dbc               gvm            124MB
+wfx-mongo               jvm            235MB
+wfx-mongo               gvm-pgo        108MB
+wfx-mongo               gvm            128MB
+wfx-http                jvm            228MB
+wfx-http                gvm-pgo        96MB
+wfx-http                gvm            115MB
+wfx                     jvm            228MB
+wfx                     gvm-pgo        92.1MB
+wfx                     gvm            112MB
+web-redis               jvm            236MB
+web-redis               gvm-pgo        116MB
+web-redis               gvm            146MB
+web-mongo               jvm            232MB
+web-mongo               gvm-pgo        105MB
+web-mongo               gvm            126MB
+web-jdbc                jvm            230MB
+web-jdbc                gvm-pgo        102MB
+web-jdbc                gvm            122MB
+web-http                jvm            226MB
+web-http                gvm-pgo        91.4MB
+web-http                gvm            109MB
+web                     jvm            226MB
+web                     gvm-pgo        91.6MB
+web                     gvm            110MB
 ```
 
-> took like an hour to complete...
+> took like 2 hours to complete... real	113m4,676s user	0m22,057s sys	0m15,584s
 
 ## Stressing test apps
 
 ``` bash
 bash stress_all.sh
 ```
-Each execution takes close to 6hs...
+Each execution takes close to 5hs...
 ```
 2 amounts of threads (1 2)
 2 amounts of clients (100 300)
