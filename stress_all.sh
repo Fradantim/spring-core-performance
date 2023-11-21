@@ -25,7 +25,7 @@ zip_and_clean(){
 }
 
 here=$(dirname $(readlink -f "$0"))
-start_datetime=`date '+%Y%m%d%H%M%S'`
+start_datetime=`date -u '+%Y%m%d%H%M%S'`
 
 export delay=5 # to let prometheus start scraping
 export ramp_up=15
@@ -111,7 +111,8 @@ for cpus_idx in ${!cpuss[@]}; do
 					echo | tee -a outputs/${start_datetime}/all.log
 
 					export appntag=${app}:${tag}
-					export spring_app_name=${app}_${tag}_${thread_type}_${cpus}_${clients}
+					app_start_datetime=`date -u '+%Y%m%d%H%M%S'`
+					export spring_app_name=${app}_${tag}_${thread_type}_${cpus}_${clients}_${app_start_datetime}
 					export workspace=outputs/${start_datetime}/${spring_app_name}
 					mkdir -p ${workspace}
 					chmod -R 777 ${workspace}
@@ -131,7 +132,7 @@ for cpus_idx in ${!cpuss[@]}; do
 
 					dc_file=${here}/docker-compose/stress/${dc_file}
 
-					docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+					docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} --compatibility up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
 					ret=${PIPESTATUS[0]}
 					if [ $ret -ne 0 ]; then
 						exit $ret

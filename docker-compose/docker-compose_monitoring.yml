@@ -8,6 +8,8 @@ services:
     volumes:
       - ../prometheus:/etc/prometheus
       - ../outputs/prometheus:/prometheus
+    ports:
+      - 9090:9090
   gfn:
     image: grafana/grafana
     container_name: gfn

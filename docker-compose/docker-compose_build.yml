@@ -20,6 +20,7 @@ services:
       - 0.0.0.0:27017:27017
     volumes:
       - ../db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../outputs/mongodb:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 2s
@@ -35,6 +36,7 @@ services:
       - 0.0.0.0:5432:5432
     volumes: 
       - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../outputs/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 2s
