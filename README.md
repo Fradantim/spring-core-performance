@@ -28,6 +28,9 @@ RAM: 16GB DDR4 @ 3200MHz
 Linux 6.2.0-35-generic #35~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Fri Oct  6 10:23:26 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
 ```
 > docker info
+<details>
+<summary>Click to expand</summary>
+
 ```
 Client: Docker Engine - Community
  Version:    24.0.7
@@ -91,6 +94,7 @@ Server:
 WARNING: bridge-nf-call-iptables is disabled
 WARNING: bridge-nf-call-ip6tables is disabled
 ```
+</details>
 
 ## Building test apps
 
@@ -109,7 +113,6 @@ After completition you should be able to see test apps docker images
 docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 ```
 ```
-REPOSITORY        TAG           SIZE
 REPOSITORY              TAG            SIZE
 wfx-redis               jvm            235MB
 wfx-redis               gvm-pgo        112MB

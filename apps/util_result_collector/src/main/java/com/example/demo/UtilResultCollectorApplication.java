@@ -224,8 +224,8 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		Set<String> apps = results.stream().map(r -> r.getApp().app()).collect(Collectors.toCollection(TreeSet::new));
 
 		out.accept(title + "\n");
-		out.accept("<details>");
-		out.accept("<summary>Click to expand</summary>");
+		out.accept("<details>\n");
+		out.accept("<summary>Click to expand</summary>\n");
 		out.accept("<table>\n");
 		// headers
 		out.accept("<tr>");
