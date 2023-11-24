@@ -10,9 +10,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,21 +50,22 @@ public class WebJDBCApplication {
 @RestController
 class QuoteResource {
 	@Autowired
-	private QuoteRepository quoteRepository;
+	private JdbcClient jdbcClient;
+
+	private RowMapper<Quote> quoteRowMapper = (rs, rn) -> new Quote(rs.getLong("id"), rs.getString("quote"),
+			rs.getString("author"));
 
 	@GetMapping("/quote")
 	public Collection<Quote> findAll() {
-		return quoteRepository.findAll();
+		return jdbcClient.sql("select * from quote").query(quoteRowMapper).list();
 	}
 
 	@GetMapping("/quote/{id}")
 	public ResponseEntity<Quote> findById(@PathVariable Long id) {
-		return ResponseEntity.of(quoteRepository.findById(id));
+		return ResponseEntity
+				.of(jdbcClient.sql("select * from quote where id = ?").param(id).query(quoteRowMapper).optional());
 	}
 }
 
-interface QuoteRepository extends ListCrudRepository<Quote, Long> {
-}
-
-record Quote(@Id Long id, String quote, String author) {
+record Quote(Long id, String quote, String author) {
 }

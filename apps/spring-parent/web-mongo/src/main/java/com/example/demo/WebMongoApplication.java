@@ -1,6 +1,7 @@
 package com.example.demo;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.repository.ListCrudRepository;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,20 +54,18 @@ public class WebMongoApplication {
 class QuoteResource {
 
 	@Autowired
-	private QuoteRepository quoteRepository;
+	private MongoTemplate mongoTemplate;
 
 	@GetMapping("/quote")
 	public Collection<Quote> findAll() {
-		return quoteRepository.findAll();
+		return mongoTemplate.findAll(Quote.class);
 	}
 
 	@GetMapping("/quote/{id}")
 	public ResponseEntity<Quote> findById(@PathVariable Long id) {
-		return ResponseEntity.of(quoteRepository.findById(id));
+		return ResponseEntity.of(Optional
+				.ofNullable(mongoTemplate.findOne(new Query().addCriteria(Criteria.where("id").is(id)), Quote.class)));
 	}
-}
-
-interface QuoteRepository extends ListCrudRepository<Quote, Long> {
 }
 
 record Quote(@Id Long id, String quote, String author) {

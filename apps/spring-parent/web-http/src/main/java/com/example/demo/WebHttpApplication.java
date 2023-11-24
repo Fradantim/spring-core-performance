@@ -1,21 +1,23 @@
 package com.example.demo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
@@ -83,23 +85,24 @@ public class WebHttpApplication {
 			}
 		};
 	}
+
+	@Bean
+	public RestClient restClient(RestClient.Builder builder) {
+		return builder.requestFactory(new JdkClientHttpRequestFactory()).build();
+	}
 }
 
 @RestController
 class QuoteResource {
-	private final static RestTemplate rt = new RestTemplate();
+	@Autowired
+	private RestClient rc;
 
 	@Value("http://localhost:${server.port:8080}")
 	private String url;
 
-	@GetMapping("/quote")
-	public Collection<Quote> findAll() {
-		throw new UnsupportedOperationException();
-	}
-
 	@GetMapping("/quote/{id}")
 	public Quote findById(@PathVariable Long id) {
-		return rt.getForEntity(url + "/inner/quote/" + id, Quote.class).getBody();
+		return rc.get().uri(url + "/inner/quote/" + id).retrieve().body(Quote.class);
 	}
 
 	@GetMapping("/inner/quote/{id}")

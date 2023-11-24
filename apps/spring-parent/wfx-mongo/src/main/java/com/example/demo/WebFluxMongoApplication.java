@@ -11,7 +11,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,25 +56,22 @@ public class WebFluxMongoApplication {
 @RestController
 class QuoteResource {
 	@Autowired
-	private QuoteRepository quoteRepository;
+	private ReactiveMongoTemplate mongoTemplate;
 
 	@GetMapping("/quote")
 	public Mono<List<Quote>> findAll() {
-		return quoteRepository.findAll().collectList();
+		return mongoTemplate.findAll(Quote.class).collectList();
 	}
 
 	@GetMapping("/quote/{id}")
 	public Mono<ResponseEntity<Quote>> findById(@PathVariable Long id) {
-		return wrapOrNotFound(quoteRepository.findById(id));
+		return wrapOrNotFound(mongoTemplate.findOne(new Query().addCriteria(Criteria.where("id").is(id)), Quote.class));
 	}
 
 	public static <S> Mono<ResponseEntity<S>> wrapOrNotFound(Mono<S> maybeResponse) {
 		return maybeResponse.switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND)))
 				.map(response -> ResponseEntity.ok().body(response));
 	}
-}
-
-interface QuoteRepository extends ReactiveMongoRepository<Quote, Long> {
 }
 
 record Quote(@Id Long id, String quote, String author) {

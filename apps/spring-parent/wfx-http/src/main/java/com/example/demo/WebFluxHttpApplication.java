@@ -1,12 +1,12 @@
 package com.example.demo;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -60,7 +60,7 @@ public class WebFluxHttpApplication {
 			new Quote(17L, "The only way to learn a new programming language is by writing programs in it.",
 					"Dennis Ritchie"))
 			.stream().collect(Collectors.toMap(Quote::id, Function.identity()));
-	
+
 	static ConfigurableApplicationContext ctx;
 
 	public static void main(String[] args) {
@@ -86,25 +86,26 @@ public class WebFluxHttpApplication {
 			}
 		};
 	}
+
+	@Bean
+	public WebClient webclient(WebClient.Builder builder) {
+		return builder.build();
+	}
 }
 
 @RestController
 class QuoteResource {
-	private final static WebClient wc = WebClient.builder().build();
-
 	@Value("http://localhost:${server.port:8080}")
 	private String url;
 
-	@GetMapping("/quote")
-	public Collection<Quote> findAll() {
-		throw new UnsupportedOperationException();
-	}
+	@Autowired
+	private WebClient wc;
 
 	@GetMapping("/quote/{id}")
 	public Mono<Quote> findById(@PathVariable Long id) {
 		return wc.get().uri(url + "/inner/quote/" + id).exchangeToMono(c -> c.bodyToMono(Quote.class));
 	}
-	
+
 	@GetMapping("/inner/quote/{id}")
 	public Mono<Quote> innerFindById(@PathVariable Long id) {
 		return Mono.just(WebFluxHttpApplication.quotes.get(id));
