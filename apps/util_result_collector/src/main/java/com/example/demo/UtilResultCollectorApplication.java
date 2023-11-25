@@ -158,11 +158,31 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		return String.valueOf(Math.max(da, db));
 	};
 
-	private Function<AppResults, String> cpuUsageAndThreadsMapper = (r) -> {
+	private Function<AppResults, String> cpuUsageAndMemoryAndThreadsMapper = (r) -> {
 		String cpuUsage = prometheusQuery("system_cpu_usage", max).apply(r);
-		return String.format("%.2f", Double.parseDouble(cpuUsage) * 100) + " / "
-				+ ((Double) Double.parseDouble(prometheusQuery("jvm_threads_peak_threads", max).apply(r))).intValue();
+		cpuUsage = String.format("%.2f", Double.parseDouble(cpuUsage) * 100);
+		String memory = toSize(prometheusQuery("jvm_memory_max_bytes", max).apply(r));
+		String threads = String.valueOf(
+				((Double) Double.parseDouble(prometheusQuery("jvm_threads_peak_threads", max).apply(r))).intValue());
+		return cpuUsage + "<br>" + memory + "<br>" + threads;
 	};
+
+	private String toSize(String bytes) {
+		return toSize(Double.parseDouble(bytes));
+	}
+
+	private String toSize(Double bytes) {
+		String[] units = new String[] { "", "K", "M", "G", "T", "P" };
+		for (String unit : units) {
+			if (bytes / 1024 > 1) {
+				bytes /= 1024;
+			} else {
+				return String.format("%.2f", bytes) + " " + unit + "B";
+			}
+		}
+
+		return String.format("%.2f", bytes * 1024) + " PB";
+	}
 
 	// TODO
 	// fix f.getName().startsWith("2")), may stop working after the year 3000
@@ -208,14 +228,15 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 
 			printer.accept("Duration: " + duration + "s, ramp up: " + rampUp + "s\n\n");
 
-			printTable(printer, "#### Requests processed per second (JMeter)", results, speedMapper);
-			printTable(printer, "#### Amount of requests processed (JMeter)", results, amountProcessedMapper);
-			printTable(printer, "#### Start up in seconds (Prometheus)", results, startUpMapper);
-			printTable(printer, "#### CPU usage % + peak threads (Prometheus)", results, cpuUsageAndThreadsMapper);
+			printTable(printer, "#### Requests processed per second (JMeter)", false, results, speedMapper);
+			printTable(printer, "#### Amount of requests processed (JMeter)", true, results, amountProcessedMapper);
+			printTable(printer, "#### Start up in seconds (Prometheus)", true, results, startUpMapper);
+			printTable(printer, "#### CPU usage % + memory + peak threads (Prometheus)", true, results,
+					cpuUsageAndMemoryAndThreadsMapper);
 		});
 	}
 
-	private void printTable(Consumer<String> out, String title, List<AppResults> results,
+	private void printTable(Consumer<String> out, String title, boolean hide, List<AppResults> results,
 			Function<AppResults, String> resultMapper) {
 		Set<Integer> clientss = results.stream().map(r -> r.getApp().clients())
 				.collect(Collectors.toCollection(TreeSet::new));
@@ -224,8 +245,10 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 		Set<String> apps = results.stream().map(r -> r.getApp().app()).collect(Collectors.toCollection(TreeSet::new));
 
 		out.accept(title + "\n");
-		out.accept("<details>\n");
-		out.accept("<summary>Click to expand</summary>\n");
+		if (hide) {
+			out.accept("<details>\n");
+			out.accept("<summary>Click to expand</summary>\n");
+		}
 		out.accept("<table>\n");
 		// headers
 		out.accept("<tr>");
@@ -307,7 +330,10 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 			}
 		}
 		out.accept("</table>\n");
-		out.accept("</details>\n\n");
+		if (hide) {
+			out.accept("</details>");
+		}
+		out.accept("\n\n");
 	}
 
 	/** @deprecated does not read easily in github markdown */

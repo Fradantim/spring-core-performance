@@ -29,11 +29,11 @@ start_datetime=`date -u '+%Y%m%d%H%M%S'`
 
 export delay=5 # to let prometheus start scraping
 export ramp_up=15
-export duration=60
+export duration=120
 export report_granurality=200
 
 cpuss=(1 2)
-clientss=(100 300)
+clientss=(50 100 200)
 vthreadss=(false true)
 apps=()
 
