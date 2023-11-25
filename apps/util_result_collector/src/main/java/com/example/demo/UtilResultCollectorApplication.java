@@ -174,14 +174,14 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 	private String toSize(Double bytes) {
 		String[] units = new String[] { "", "K", "M", "G", "T", "P" };
 		for (String unit : units) {
-			if (bytes / 1024 > 1) {
+			if (bytes / 1024 >= 1) {
 				bytes /= 1024;
 			} else {
-				return String.format("%.2f", bytes) + " " + unit + "B";
+				return String.format("%.2f", bytes) + unit + "B";
 			}
 		}
 
-		return String.format("%.2f", bytes * 1024) + " PB";
+		return String.format("%.2f", bytes * 1024) + "PB";
 	}
 
 	// TODO
