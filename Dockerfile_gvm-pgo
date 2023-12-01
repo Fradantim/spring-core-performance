@@ -15,9 +15,9 @@ COPY . .
 # sharing a network repository seems like a good idea if you already have one, but the first load takes 180s~ and later 18s~, while not using it takes 27s~ (for java apps)
 RUN mkdir ~/.m2 && echo "<settings> <mirrors> <mirror> <id>nexus</id> <mirrorOf>*</mirrorOf> <url>http://host.docker.internal:8081/repository/maven-public/</url> </mirror> </mirrors> </settings>" > ~/.m2/settings.xml
 RUN apt-get update && apt-get install gcc zlib1g-dev -y
-RUN sh mvnw -Pnative -Ppgo-instrument clean native:compile -pl ${APP_NAME}
+RUN sh mvnw -P${profile} -Pnative -Ppgo-instrument clean native:compile -pl ${APP_NAME}
 RUN ./${APP_NAME}/target/${APP_NAME}_pgo-instrument --stress=true --spring.datasource.url=jdbc:postgresql://host.docker.internal:5432/postgres --spring.r2dbc.url=r2dbc:postgresql://host.docker.internal:5432/postgres --spring.data.mongodb.uri=mongodb://host.docker.internal:27017/test
-RUN sh mvnw -Pnative -Ppgo clean native:compile -pl ${APP_NAME}
+RUN sh mvnw -P${profile} -Pnative -Ppgo clean native:compile -pl ${APP_NAME}
 
 # the final container
 FROM frolvlad/alpine-glibc:alpine-3.18

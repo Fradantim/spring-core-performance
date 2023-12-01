@@ -123,7 +123,7 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 	private Function<AppResults, String> speedMapper = (r) -> String
 			.valueOf(r.getjMeterResult().total().throughput().intValue());
 
-	private Function<AppResults, String> prometheusQuery(String query, BinaryOperator<String> reductor) {
+	private Function<AppResults, String> prometheusQuery(String query, BinaryOperator<Double> reductor) {
 		return (r) -> {
 			long timeDelta = (r.getDuration() + r.getRampUp()) * 2 * 1000;
 			long end = (r.getEpoch() + timeDelta) / 1000;
@@ -142,9 +142,17 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 			if (res.data() == null || res.data().result() == null || res.data().result().isEmpty())
 				return "pmtheus_empty";
 
-			String ress = res.data().result().stream().filter(pr -> r.getFolderName().equals(pr.metric().application()))
-					.map(Result::values).flatMap(List::stream).filter(l -> l.size() > 1).map(l -> l.get(1))
-					.filter(Objects::nonNull).map(String::valueOf).reduce(reductor).map(String::valueOf).orElse("N/A");
+			Stream<Result> thisExecutionResults = res.data().result().stream()
+					.filter(pr -> r.getFolderName().equals(pr.metric().application()));
+
+			Map<Object, List<List<Object>>> thisExecutionResultsGroupedByTimestamp = thisExecutionResults
+					.map(Result::values).flatMap(List::stream).filter(l -> l.size() > 1)
+					.collect(Collectors.groupingBy(l -> l.get(0)));
+
+			String ress = thisExecutionResultsGroupedByTimestamp.values().stream()
+					.map(l -> l.stream().filter(ls -> ls.size() > 1).map(ls -> ls.get(1)).map(String.class::cast)
+							.map(Double::parseDouble).reduce((a, b) -> a + b).get())
+					.reduce(reductor).map(String::valueOf).orElse("N/A");
 			return ress;
 		};
 	}
@@ -152,18 +160,13 @@ public class UtilResultCollectorApplication implements CommandLineRunner {
 	private Function<AppResults, String> startUpMapper = prometheusQuery("application_started_time_seconds",
 			(a, b) -> a);
 
-	private BinaryOperator<String> max = (a, b) -> {
-		Double da = Double.parseDouble(a);
-		Double db = Double.parseDouble(b);
-		return String.valueOf(Math.max(da, db));
-	};
-
 	private Function<AppResults, String> cpuUsageAndMemoryAndThreadsMapper = (r) -> {
-		String cpuUsage = prometheusQuery("system_cpu_usage", max).apply(r);
+		String cpuUsage = prometheusQuery("system_cpu_usage", Math::max).apply(r);
 		cpuUsage = String.format("%.2f", Double.parseDouble(cpuUsage) * 100);
-		String memory = toSize(prometheusQuery("jvm_memory_max_bytes", max).apply(r));
-		String threads = String.valueOf(
-				((Double) Double.parseDouble(prometheusQuery("jvm_threads_peak_threads", max).apply(r))).intValue());
+		String memory = toSize(prometheusQuery("jvm_memory_committed_bytes", Math::max).apply(r));
+		String threads = String
+				.valueOf(((Double) Double.parseDouble(prometheusQuery("jvm_threads_peak_threads", Math::max).apply(r)))
+						.intValue());
 		return cpuUsage + "<br>" + memory + "<br>" + threads;
 	};
 

@@ -52,6 +52,18 @@
 
 	<profiles>
 		<profile>
+			<id>RT</id>
+			<properties>
+				<virtual-threads>false</virtual-threads>
+			</properties>
+		</profile>
+		<profile>
+			<id>VT</id>
+			<properties>
+				<virtual-threads>true</virtual-threads>
+			</properties>
+		</profile>
+		<profile>
 			<id>pgo-instrument</id>
 			<build>
 				<plugins>

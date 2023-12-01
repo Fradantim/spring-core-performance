@@ -40,13 +40,12 @@ services:
         condition: service_healthy
     environment:
       - SPRING_APPLICATION_NAME=${spring_app_name}
-      - SPRING_THREADS_VIRTUAL_ENABLED=${vthreads}
       - SPRING_DATA_MONGODB_URI=mongodb://mdb:27017/test
     deploy:
       resources:
         limits:
           cpus: '${cpus}'
-          memory: 1G
+          memory: 2G
   jmt:
     image: justb4/jmeter
     container_name: jmt

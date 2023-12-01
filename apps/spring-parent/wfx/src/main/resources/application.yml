@@ -1,4 +1,6 @@
-spring.application.name:  @project.artifactId@
+spring:
+  application.name:  @project.artifactId@
+  threads.virtual.enabled: @virtual-threads@
     
 management:
   endpoints.web.exposure.include: health,info,prometheus

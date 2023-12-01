@@ -1,5 +1,6 @@
 spring:
-  application.name: @project.artifactId@
+  application.name:  @project.artifactId@
+  threads.virtual.enabled: @virtual-threads@
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/postgres
     username: postgres
