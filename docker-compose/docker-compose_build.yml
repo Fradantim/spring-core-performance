@@ -19,7 +19,7 @@ services:
     ports:
       - 0.0.0.0:27017:27017
     volumes:
-      - ../db/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../container-utils/init-mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
       - ../outputs/mongodb:/data/db
     healthcheck:
       test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
@@ -35,7 +35,7 @@ services:
     ports:
       - 0.0.0.0:5432:5432
     volumes: 
-      - ../db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../container-utils/init-postgresql.sql:/docker-entrypoint-initdb.d/init.sql
       - ../outputs/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -50,7 +50,7 @@ services:
         FROM redis:7.2.3
         EXPOSE 6379
         ENTRYPOINT nohup bash -c "redis-server --appendonly yes" & sleep 1s \
-          && cat /init-data/redis.init | redis-cli --pipe \
+          && cat /init-data/init-redis.rs | redis-cli --pipe \
           && redis-cli save \
           && redis-cli shutdown \
           && redis-server
@@ -58,7 +58,7 @@ services:
       - 0.0.0.0:6379:6379
     volumes:
       - type: bind
-        source: ../db
+        source: ../container-utils
         target: /init-data
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]

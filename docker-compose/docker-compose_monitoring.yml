@@ -6,7 +6,7 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
     volumes:
-      - ../prometheus:/etc/prometheus
+      - ../container-utils:/etc/prometheus
       - ../outputs/prometheus:/prometheus
     ports:
       - 9090:9090
@@ -19,4 +19,4 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - ../grafana:/etc/grafana/provisioning/datasources
+      - ../container-utils/grafana:/etc/grafana/provisioning/datasources
