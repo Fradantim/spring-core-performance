@@ -1,0 +1,9 @@
+spring:
+  application.name:  @project.artifactId@
+  threads.virtual.enabled: @virtual-threads@
+
+url: http://localhost:1080
+    
+management:
+  endpoints.web.exposure.include: health,info,prometheus
+  metrics.tags.application: ${spring.application.name}

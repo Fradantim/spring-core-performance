@@ -1,0 +1,74 @@
+version: '3.8'
+services:
+  pmt:
+    image: prom/prometheus
+    container_name: pmt
+    networks:
+      - stress-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ../prometheus:/etc/prometheus
+      - ../outputs/prometheus:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "http://localhost:9090", "-O", "health_wget"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  mdb:
+    image: mongo:6-jammy
+    container_name: mdb
+    networks:
+      - stress-network
+    command: --quiet --logpath /dev/null
+    volumes:
+      - ../container-utils/init-mongo.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ../outputs/mongodb:/data/db
+    healthcheck:
+      test: ["CMD","mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  pdb:
+    image: postgres:14.1-alpine
+    container_name: pdb
+    networks:
+      - stress-network
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes: 
+      - ../container-utils/init-postgresql.sql:/docker-entrypoint-initdb.d/init.sql
+      - ../outputs/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+  red:
+    container_name: red
+    networks:
+      - stress-network
+    build:
+      context: .
+      dockerfile_inline: |
+        FROM redis:7.2.3
+        EXPOSE 6379
+        ENTRYPOINT nohup bash -c "redis-server --appendonly yes" & sleep 1s \
+          && cat /init-data/init-redis.rs | redis-cli --pipe \
+          && redis-cli save \
+          && redis-cli shutdown \
+          && redis-server
+    volumes:
+      - type: bind
+        source: ../container-utils
+        target: /init-data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+networks:
+  stress-network:
+    name: stress-network

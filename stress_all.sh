@@ -1,5 +1,7 @@
 #!/bin/bash
 
+apex_docker_compose_file=docker-compose/docker-compose_stress_apex.yml
+
 # TODO, cant delete docker created files and folders...
 zip_and_clean(){
 	# zip results
@@ -24,22 +26,31 @@ zip_and_clean(){
 	mv ${workspace}_tmp ${workspace}
 }
 
-here=$(dirname $(readlink -f "$0"))
-start_datetime=`date '+%Y%m%d%H%M%S'`
+escape() {
+	cd ${here}
+	docker compose -f ${apex_docker_compose_file} down
+	exit ${1}
+}
 
-export delay=0
+docker compose -f ${apex_docker_compose_file} up --wait -d
+if [ $? -ne 0 ]; then
+	exit 1
+fi
+
+here=$(dirname $(readlink -f "$0"))
+start_datetime=`date -u '+%Y%m%d%H%M%S'`
+
+export delay=5 # to let prometheus start scraping
 export ramp_up=15
 export duration=120
 export report_granurality=200
 
-cpuss=(1 2 4)
-clientss=(50 250 500)
+cpuss=(1 2)
+clientss=(50 100 200)
 apps=()
 
-cd ${here}/apps/
-for i in `ls -d web*/`; do
-	# remove last "/"
-	i=${i::-1}
+cd ${here}/apps/spring-parent/
+for i in `ls -d w*`; do
 	echo "- ${i}"
 	apps+=(${i})
 done
@@ -53,6 +64,16 @@ mkdir -p outputs/${start_datetime}
 chmod 777 outputs/${start_datetime}
 touch outputs/${start_datetime}/all.log
 
+global_count=0
+per_tag_count=$(( ${#cpuss[@]} * ${#clientss[@]} ))
+for app_idx in ${!apps[@]}; do
+	app=${apps[$app_idx]}
+	for tag in `docker image ls ${app} --format "{{.Tag}}"`; do
+		global_count=$((global_count + per_tag_count))
+	done
+done
+
+global_idx=0
 for cpus_idx in ${!cpuss[@]}; do
 	export cpus=${cpuss[$cpus_idx]}
 	echo "============================================================"
@@ -77,30 +98,35 @@ for cpus_idx in ${!cpuss[@]}; do
 
 			for tag_idx in ${!tags[@]}; do
 				tag=${tags[$tag_idx]}
+				global_idx=$((global_idx + 1))
+
+				title="[ ${global_idx} / ${global_count} ] ::"
+				title="${title} ${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) "
+				title="${title} ${clients} clients ($((clients_idx + 1))/${#clientss[@]})"
+				title="${title}  -"
+				title="${title} ${app} ($((app_idx + 1))/${#apps[@]})"
+				title="${title} :"
+				title="${title} ${tag} ($((tag_idx + 1))/${#tags[@]})"
+
 				echo "============================================================"
-				echo " ${cpus} cpus ($((cpus_idx + 1))/${#cpuss[@]}) ${clients} clients ($((clients_idx + 1))/${#clientss[@]}) - ${app} ($((app_idx + 1))/${#apps[@]}) : ${tag} ($((tag_idx + 1))/${#tags[@]})" | tee -a outputs/${start_datetime}/all.log
+				echo ${title} | tee -a outputs/${start_datetime}/all.log
 				echo "============================================================"
 				echo | tee -a outputs/${start_datetime}/all.log
 
 				export appntag=${app}:${tag}
-				export workspace=outputs/${start_datetime}/${app}_${tag}_${cpus}_${clients}
+				app_start_datetime=`date -u '+%Y%m%d%H%M%S'`
+				export spring_app_name=${app}_${tag}_${cpus}_${clients}_${app_start_datetime}
+				export workspace=outputs/${start_datetime}/${spring_app_name}
 				mkdir -p ${workspace}
 				chmod -R 777 ${workspace}
 
-				dc_file=docker-compose.yml
-				case $app in
-					*dbc*)
-						dc_file=docker-compose_w_postgres.yml
-					;;
-					*mongo*)
-						dc_file=docker-compose_w_mongo.yml
-					;;
-				esac
+				dc_file=${here}/docker-compose/docker-compose_stress.yml
 
-				docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+				# docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} --compatibility up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+				docker compose -f ${dc_file} --compatibility up --abort-on-container-exit | tee -a outputs/${start_datetime}/all.log
 				ret=${PIPESTATUS[0]}
 				if [ $ret -ne 0 ]; then
-					exit $ret
+					escape $ret
 				fi
 
 				# zip_and_clean ${here} ${here}/${workspace}
@@ -113,4 +139,4 @@ done
 
 docker volume prune -f
 
-exit 0
+escape 0

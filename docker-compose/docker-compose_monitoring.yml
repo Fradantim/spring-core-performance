@@ -1,0 +1,22 @@
+version: '3.8'
+services:
+  pmt:
+    image: prom/prometheus
+    container_name: pmt
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ../container-utils:/etc/prometheus
+      - ../outputs/prometheus:/prometheus
+    ports:
+      - 9090:9090
+  gfn:
+    image: grafana/grafana
+    container_name: gfn
+    ports:
+      - 3000:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ../container-utils/grafana:/etc/grafana/provisioning/datasources

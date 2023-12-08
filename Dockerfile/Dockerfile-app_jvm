@@ -1,0 +1,21 @@
+# Compile our java files in this container
+FROM ubuntu:22.04 AS builder
+
+# get and set graalvm-jdk-21
+RUN apt-get update && apt-get install wget -y
+RUN wget https://download.oracle.com/graalvm/21/archive/graalvm-jdk-21.0.1_linux-x64_bin.tar.gz && tar -xf graalvm-jdk-21*_linux-x64_bin.tar.gz
+RUN mv graalvm*/ graalvm-jdk-21/
+ENV JAVA_HOME=./graalvm-jdk-21
+RUN export JAVA_HOME
+
+COPY . .
+
+# compile app
+RUN mkdir ~/.m2 && echo "<settings> <mirrors> <mirror> <id>nexus</id> <mirrorOf>*</mirrorOf> <url>http://host.docker.internal:8081/repository/maven-public/</url> </mirror> </mirrors> </settings>" > ~/.m2/settings.xml
+RUN sh mvnw clean package -P${profile} -pl ${APP_NAME}
+
+# the final container
+FROM eclipse-temurin:21-jre-alpine
+RUN apk --no-cache add curl
+COPY --from=builder ${APP_NAME}/target/*.jar ${APP_NAME}.jar
+ENTRYPOINT ["java","-jar","${APP_NAME}.jar"]
