@@ -1,5 +1,7 @@
 #!/bin/bash
 
+apex_docker_compose_file=docker-compose/docker-compose_stress_apex.yml
+
 # TODO, cant delete docker created files and folders...
 zip_and_clean(){
 	# zip results
@@ -23,6 +25,17 @@ zip_and_clean(){
 	rm -rf ${workspace}
 	mv ${workspace}_tmp ${workspace}
 }
+
+escape() {
+	cd ${here}
+	docker compose -f ${apex_docker_compose_file} down
+	exit ${1}
+}
+
+docker compose -f ${apex_docker_compose_file} up --wait -d
+if [ $? -ne 0 ]; then
+	exit 1
+fi
 
 here=$(dirname $(readlink -f "$0"))
 start_datetime=`date -u '+%Y%m%d%H%M%S'`
@@ -107,25 +120,13 @@ for cpus_idx in ${!cpuss[@]}; do
 				mkdir -p ${workspace}
 				chmod -R 777 ${workspace}
 
-				dc_file=docker-compose.yml
-				case $app in
-					*dbc*)
-						dc_file=docker-compose_w_postgres.yml
-					;;
-					*mongo*)
-						dc_file=docker-compose_w_mongo.yml
-					;;
-					*redis*)
-						dc_file=docker-compose_w_redis.yml
-					;;
-				esac
+				dc_file=${here}/docker-compose/docker-compose_stress.yml
 
-				dc_file=${here}/docker-compose/stress/${dc_file}
-
-				docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} --compatibility up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+				# docker compose -f ${dc_file} rm -fsv && docker compose -f ${dc_file} --compatibility up --abort-on-container-exit --remove-orphans | tee -a outputs/${start_datetime}/all.log
+				docker compose -f ${dc_file} --compatibility up --abort-on-container-exit | tee -a outputs/${start_datetime}/all.log
 				ret=${PIPESTATUS[0]}
 				if [ $ret -ne 0 ]; then
-					exit $ret
+					escape $ret
 				fi
 
 				# zip_and_clean ${here} ${here}/${workspace}
@@ -138,4 +139,4 @@ done
 
 docker volume prune -f
 
-exit 0
+escape 0

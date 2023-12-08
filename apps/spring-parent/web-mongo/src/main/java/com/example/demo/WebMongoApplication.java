@@ -2,6 +2,8 @@ package com.example.demo;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -23,28 +24,23 @@ import org.springframework.web.client.RestTemplate;
 
 @SpringBootApplication
 public class WebMongoApplication {
-	static ConfigurableApplicationContext ctx;
-
 	public static void main(String[] args) {
-		ctx = SpringApplication.run(WebMongoApplication.class, args);
+		SpringApplication.run(WebMongoApplication.class, args);
 	}
 
 	@Bean
 	// @ConditionalOnProperty("stress") // not currently working with spring-native
-	public CommandLineRunner stresser(@Value("${stress:false}") Boolean stress) {
+	CommandLineRunner stresser(@Value("${stress:false}") Boolean stress) {
 		return (args) -> {
 			if (stress) {
 				RestTemplate rt = new RestTemplate();
 				rt.getForEntity("http://localhost:8080/quote/11", String.class);
 				System.out.println("stressing...");
-				IntStream.range(0, 50000).parallel().forEach(i -> {
-					rt.getForEntity("http://localhost:8080/quote/11", String.class);
-				});
+				IntStream.range(0, 50000).parallel()
+						.forEach(i -> rt.getForEntity("http://localhost:8080/quote/11", String.class));
 				System.out.println("closing context...");
-				// context.close does not stop the executable on pgo-instrumented compilation
-				// Executors.newSingleThreadScheduledExecutor().schedule(() -> ctx.close(), 2,
-				// TimeUnit.SECONDS);
-				System.exit(0);
+				// context.close does not stop the executable when args are used
+				Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 2, TimeUnit.SECONDS);
 			}
 		};
 	}

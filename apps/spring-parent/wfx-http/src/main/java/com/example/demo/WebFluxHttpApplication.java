@@ -2,6 +2,8 @@ package com.example.demo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -11,12 +13,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
@@ -61,34 +61,28 @@ public class WebFluxHttpApplication {
 					"Dennis Ritchie"))
 			.stream().collect(Collectors.toMap(Quote::id, Function.identity()));
 
-	static ConfigurableApplicationContext ctx;
-
 	public static void main(String[] args) {
-		ctx = SpringApplication.run(WebFluxHttpApplication.class, args);
+		SpringApplication.run(WebFluxHttpApplication.class, args);
 	}
 
 	@Bean
 	// @ConditionalOnProperty("stress") // not currently working with spring-native
-	public CommandLineRunner stresser(@Value("${stress:false}") Boolean stress) {
+	CommandLineRunner stresser(@Value("${stress:false}") Boolean stress, WebClient wc) {
 		return (args) -> {
 			if (stress) {
-				RestTemplate rt = new RestTemplate();
-				rt.getForEntity("http://localhost:8080/quote/11", String.class);
+				wc.get().uri("http://localhost:8080/quote/11").exchangeToMono(c -> c.bodyToMono(String.class)).block();
 				System.out.println("stressing...");
-				IntStream.range(0, 50000).parallel().forEach(i -> {
-					rt.getForEntity("http://localhost:8080/quote/11", String.class);
-				});
+				IntStream.range(0, 50000).parallel().forEach(i -> wc.get().uri("http://localhost:8080/quote/11")
+						.exchangeToMono(c -> c.bodyToMono(String.class)).block());
 				System.out.println("closing context...");
-				// context.close does not stop the executable on pgo-instrumented compilation
-				// Executors.newSingleThreadScheduledExecutor().schedule(() -> ctx.close(), 2,
-				// TimeUnit.SECONDS);
-				System.exit(0);
+				// context.close does not stop the executable when args are used
+				Executors.newSingleThreadScheduledExecutor().schedule(() -> System.exit(0), 2, TimeUnit.SECONDS);
 			}
 		};
 	}
 
 	@Bean
-	public WebClient webclient(WebClient.Builder builder) {
+	WebClient webclient(WebClient.Builder builder) {
 		return builder.build();
 	}
 }

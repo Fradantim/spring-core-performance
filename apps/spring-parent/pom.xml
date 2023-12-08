@@ -16,6 +16,7 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<virtual-threads>false</virtual-threads>
 	</properties>
 
 	<modules>
@@ -53,9 +54,6 @@
 	<profiles>
 		<profile>
 			<id>RT</id>
-			<properties>
-				<virtual-threads>false</virtual-threads>
-			</properties>
 		</profile>
 		<profile>
 			<id>VT</id>
