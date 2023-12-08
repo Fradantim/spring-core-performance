@@ -20,14 +20,15 @@ export here=$(dirname $(readlink -f "$0"))
 
 docker_files=()
 
-for i in `ls -f Dockerfile_*`; do
+cd Dockerfile
+for i in `ls -f Dockerfile-app_*`; do
 	echo "- ${i}"
 	docker_files+=(${i})
 done
+cd ..
 
 echo
 echo
-
 
 profiles=(RT VT)
 apps=()
@@ -68,7 +69,7 @@ for app in "${apps[@]}"; do
 
 			export APP_NAME=${app}
 
-			cat ${here}/${docker_file} | envsubst > /tmp/${docker_file}
+			cat ${here}/Dockerfile/${docker_file} | envsubst > /tmp/${docker_file}
 			tag=$(echo ${docker_file} | cut -d '_' -f 2)
 
 			docker build -f /tmp/${docker_file} -t ${app}:${tag}_${profile} --add-host=host.docker.internal:host-gateway --network host .

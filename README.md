@@ -99,7 +99,7 @@ WARNING: bridge-nf-call-ip6tables is disabled
 ## Building test apps
 
 ``` bash
-bash docker_build_all.sh
+bash build_all.sh
 ```
 
 Something went wrong? you may need to:
@@ -112,6 +112,9 @@ After completition you should be able to see test apps docker images
 ``` bash
 docker image ls --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"
 ```
+<details>
+<summary>Click to expand</summary>
+
 ```
 REPOSITORY              TAG            SIZE
 wfx-redis               jvm_VT         235MB
@@ -178,6 +181,7 @@ web                     gvm_RT         111MB
 > [GraalVM Builds require setting thread-type at compilation time](https://stackoverflow.com/questions/77550123/spring-native-build-not-using-virtual-threads) so the same image has a real-thread and virtual-thread variant (the jvm ones do not requiere it).
 
 > took like 4 hours to complete... real	217m15,199s user	0m38,620s sys	0m30,329s 
+</details>
 
 ## Stressing test apps
 
@@ -191,14 +195,13 @@ Run it as many times you want to get more data as next step will load the best r
 while true; do bash stress_all.sh; done
 ```
 **IMPORTANT** to reduce disk usage at the end will execute a 
-```
+``` bash
 docker volume prune -f
 ```
 
 ## Loading results
 ``` bash
-cd apps/util_result_collector
-sh mvnw spring-boot:run -Dspring-boot.run.arguments=--path-2-look=$(pwd)/../../outputs
+bash get_results.sh
 ```
 
 At the end it will print the test results in a html syntax:
